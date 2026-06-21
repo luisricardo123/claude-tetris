@@ -14,6 +14,11 @@ const COLORS = [
   '#90caf9', // J - pale blue
   '#ffb74d', // L - orange
   '#ec407a', // Tuerca - magenta
+  '#ff1744', // Bomb
+  '#ffea00', // Ray
+  '#e040fb', // Tint
+  '#00e676', // Gravity
+  '#40c4ff', // Freeze
 ];
 
 const PIECES = [
@@ -30,6 +35,12 @@ const PIECES = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+const POWERUP_TYPES    = ['bomb', 'ray', 'tint', 'gravity', 'freeze'];
+const POWERUP_COLOR    = { bomb: 9, ray: 10, tint: 11, gravity: 12, freeze: 13 };
+const POWERUP_NAME     = { bomb: 'BOMBA', ray: 'RAYO', tint: 'TINTE', gravity: 'GRAVEDAD', freeze: 'CONGELAR' };
+const POWERUP_ICON     = { bomb: 'B', ray: '!', tint: 'T', gravity: 'v', freeze: '*' };
+const POWERUP_INTERVAL = 10; // lines between power-up spawns
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -42,8 +53,10 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggleBtn = document.getElementById('theme-toggle');
+const powerupEl = document.getElementById('powerup-indicator');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let linesUntilPowerup, freezeUntil, activePowerup, pendingPowerup;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -53,6 +66,11 @@ function randomPiece() {
   const type = Math.floor(Math.random() * 8) + 1;
   const shape = PIECES[type].map(row => [...row]);
   return { type, shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
+}
+
+function randomPowerup() {
+  const effect = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+  return { powerup: effect, shape: [[POWERUP_COLOR[effect]]], x: Math.floor(COLS / 2), y: 0 };
 }
 
 function collide(shape, ox, oy) {
@@ -96,6 +114,66 @@ function merge() {
         board[current.y + r][current.x + c] = current.shape[r][c];
 }
 
+function applyPowerup(effect, px, py) {
+  switch (effect) {
+    case 'bomb':
+      for (let r = py - 1; r <= py + 1; r++)
+        for (let c = px - 1; c <= px + 1; c++)
+          if (r >= 0 && r < ROWS && c >= 0 && c < COLS)
+            board[r][c] = 0;
+      break;
+    case 'ray':
+      // clears the entire row and column of the landing cell
+      for (let c = 0; c < COLS; c++) board[py][c] = 0;
+      for (let r = 0; r < ROWS; r++) board[r][px] = 0;
+      break;
+    case 'tint': {
+      const counts = new Array(9).fill(0);
+      for (let r = 0; r < ROWS; r++)
+        for (let c = 0; c < COLS; c++)
+          if (board[r][c] >= 1 && board[r][c] <= 8) counts[board[r][c]]++;
+      let top = 1;
+      for (let i = 2; i <= 8; i++) if (counts[i] > counts[top]) top = i;
+      if (counts[top] > 0)
+        for (let r = 0; r < ROWS; r++)
+          for (let c = 0; c < COLS; c++)
+            if (board[r][c] === top) board[r][c] = 0;
+      break;
+    }
+    case 'gravity':
+      // compact each column independently — cells fall straight down
+      for (let c = 0; c < COLS; c++) {
+        const col = [];
+        for (let r = 0; r < ROWS; r++) if (board[r][c]) col.push(board[r][c]);
+        for (let r = 0; r < ROWS; r++)
+          board[r][c] = r < ROWS - col.length ? 0 : col[r - (ROWS - col.length)];
+      }
+      break;
+    case 'freeze':
+      freezeUntil = performance.now() + 5000;
+      break;
+  }
+  activePowerup = effect;
+  updatePowerupIndicator();
+  if (effect !== 'freeze') {
+    setTimeout(() => {
+      if (activePowerup === effect) { activePowerup = null; updatePowerupIndicator(); }
+    }, 1500);
+  }
+  // freeze expiry is handled in loop() to avoid setTimeout conflicts on double-freeze
+}
+
+function updatePowerupIndicator() {
+  if (!powerupEl) return;
+  if (!activePowerup) {
+    powerupEl.textContent = '';
+    powerupEl.removeAttribute('data-effect');
+  } else {
+    powerupEl.textContent = POWERUP_NAME[activePowerup];
+    powerupEl.setAttribute('data-effect', activePowerup);
+  }
+}
+
 function clearLines() {
   let cleared = 0;
   for (let r = ROWS - 1; r >= 0; r--) {
@@ -111,6 +189,11 @@ function clearLines() {
     score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    linesUntilPowerup -= cleared;
+    if (linesUntilPowerup <= 0) {
+      linesUntilPowerup = POWERUP_INTERVAL;
+      pendingPowerup = true;
+    }
     updateHUD();
   }
 }
@@ -139,14 +222,21 @@ function softDrop() {
 }
 
 function lockPiece() {
-  merge();
+  if (current.powerup) {
+    const px = current.x;
+    const py = Math.max(0, Math.min(current.y, ROWS - 1));
+    applyPowerup(current.powerup, px, py);
+  } else {
+    merge();
+  }
   clearLines();
   spawn();
 }
 
 function spawn() {
   current = next;
-  next = randomPiece();
+  next = pendingPowerup ? randomPowerup() : randomPiece();
+  pendingPowerup = false;
   if (collide(current.shape, current.x, current.y)) {
     endGame();
   }
@@ -168,6 +258,16 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   // highlight
   context.fillStyle = 'rgba(255,255,255,0.12)';
   context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  // power-up icon — skip for ghost (alpha < 1)
+  if (colorIndex >= 9 && !(alpha < 1)) {
+    context.globalAlpha = 1;
+    context.fillStyle = 'rgba(0,0,0,0.75)';
+    context.font = `bold ${Math.floor(size * 0.5)}px monospace`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    const effect = POWERUP_TYPES[colorIndex - 9];
+    context.fillText(POWERUP_ICON[effect] || '?', x * size + size / 2, y * size + size / 2 + 1);
+  }
   context.globalAlpha = 1;
 }
 
@@ -249,13 +349,23 @@ function togglePause() {
 function loop(ts) {
   const dt = ts - lastTime;
   lastTime = ts;
-  dropAccum += dt;
-  if (dropAccum >= dropInterval) {
-    dropAccum = 0;
-    if (!collide(current.shape, current.x, current.y + 1)) {
-      current.y++;
-    } else {
-      lockPiece();
+
+  // handle freeze expiry
+  if (freezeUntil && ts >= freezeUntil) {
+    freezeUntil = 0;
+    if (activePowerup === 'freeze') { activePowerup = null; updatePowerupIndicator(); }
+  }
+
+  const frozen = freezeUntil > 0;
+  if (!frozen) {
+    dropAccum += dt;
+    if (dropAccum >= dropInterval) {
+      dropAccum = 0;
+      if (!collide(current.shape, current.x, current.y + 1)) {
+        current.y++;
+      } else {
+        lockPiece();
+      }
     }
   }
   if (gameOver) return;
@@ -273,6 +383,11 @@ function init() {
   dropInterval = 1000;
   dropAccum = 0;
   lastTime = performance.now();
+  linesUntilPowerup = POWERUP_INTERVAL;
+  freezeUntil = 0;
+  activePowerup = null;
+  pendingPowerup = false;
+  updatePowerupIndicator();
   next = randomPiece();
   spawn();
   updateHUD();

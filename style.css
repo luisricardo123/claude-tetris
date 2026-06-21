@@ -221,3 +221,29 @@ kbd {
 #restart-btn:hover {
   background: var(--accent-hover);
 }
+
+/* ---- Power-up indicator ---- */
+#powerup-indicator {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-height: 20px;
+  color: var(--accent);
+  transition: color 0.2s;
+}
+
+#powerup-indicator[data-effect="bomb"]    { color: #ff1744; }
+#powerup-indicator[data-effect="ray"]     { color: #ffea00; }
+#powerup-indicator[data-effect="tint"]    { color: #e040fb; }
+#powerup-indicator[data-effect="gravity"] { color: #00e676; }
+#powerup-indicator[data-effect="freeze"]  { color: #40c4ff; }
+
+@keyframes powerup-flash {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+#powerup-indicator:not(:empty) {
+  animation: powerup-flash 0.4s ease-in-out 4;
+}

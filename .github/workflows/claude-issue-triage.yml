@@ -1,0 +1,96 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write   # necesario para añadir labels y publicar comentarios
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Analizar issue con Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Permitir únicamente los comandos gh necesarios para el triage
+          claude_args: '--allowed-tools "Bash(gh label list*),Bash(gh label create*),Bash(gh issue edit*),Bash(gh issue comment*),Bash(gh issue view*)"'
+
+          prompt: |
+            Eres un asistente de triage para el repositorio de un juego Tetris en JavaScript.
+            El repositorio tiene tres archivos: `game.js` (lógica del juego, ~305 líneas), `index.html` (estructura DOM con dos canvas) y `style.css` (estilos retro oscuros).
+
+            Tu tarea es analizar el siguiente issue y realizar DOS acciones:
+
+            ## Issue a analizar
+            - **Número:** ${{ github.event.issue.number }}
+            - **Título:** ${{ github.event.issue.title }}
+            - **Cuerpo:**
+            ${{ github.event.issue.body }}
+
+            ---
+
+            ## Acción 1 — Asignar labels
+
+            1. Ejecuta `gh label list --repo ${{ github.repository }} --limit 100` para ver las labels existentes.
+            2. Elige las labels que mejor describan el issue (puedes asignar más de una).
+            3. Si ninguna label existente encaja bien, crea una nueva con un color apropiado:
+               ```
+               gh label create "nombre-label" --color "RRGGBB" --repo ${{ github.repository }}
+               ```
+               Usa colores descriptivos: rojo (`ee0701`) para bugs, verde (`0075ca`) para mejoras, amarillo (`e4e669`) para preguntas, morado (`7057ff`) para nuevas funcionalidades, etc.
+            4. Aplica las labels elegidas (existentes o recién creadas) al issue:
+               ```
+               gh issue edit ${{ github.event.issue.number }} --add-label "label1,label2" --repo ${{ github.repository }}
+               ```
+
+            ## Acción 2 — Publicar diagnóstico como comentario
+
+            Publica UN único comentario en español con el diagnóstico estructurado usando:
+            ```
+            gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "..."
+            ```
+
+            El comentario debe seguir esta estructura en Markdown:
+
+            ```
+            ## 🤖 Diagnóstico automático
+
+            ### Resumen
+            [Descripción breve y clara del problema o solicitud en 1-2 oraciones]
+
+            ### Tipo de problema
+            [Bug / Mejora / Nueva funcionalidad / Pregunta / Documentación / Otro]
+
+            ### Causa probable
+            [Explicación técnica de qué puede estar causando el problema, o qué se necesitaría implementar. Referencia funciones o constantes específicas de game.js si aplica, por ejemplo: `collide()`, `tryRotate()`, `clearLines()`, `BLOCK`, etc.]
+
+            ### Áreas del código probablemente afectadas
+            - `game.js` — [describir qué funciones/secciones]
+            - `index.html` — [solo si aplica]
+            - `style.css` — [solo si aplica]
+
+            ### Pasos sugeridos para la solución
+            1. [Paso concreto 1]
+            2. [Paso concreto 2]
+            3. [...]
+
+            ---
+            *Diagnóstico generado automáticamente por Claude. Puede no ser 100% preciso.*
+            ```
+
+            ## Restricciones importantes
+            - NO edites el cuerpo ni el título del issue.
+            - NO modifiques ningún archivo del repositorio.
+            - NO cierres el issue.
+            - Publica SOLO UN comentario de diagnóstico (no múltiples).

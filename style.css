@@ -183,6 +183,10 @@ kbd {
   display: none;
 }
 
+.overlay-box.hidden {
+  display: none;
+}
+
 .overlay-box {
   text-align: center;
   display: flex;
@@ -220,6 +224,105 @@ kbd {
 
 #restart-btn:hover {
   background: var(--accent-hover);
+}
+
+/* ---- Pause menu ---- */
+.pause-box {
+  min-width: 200px;
+}
+
+.pause-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.menu-btn {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-align: center;
+}
+
+.menu-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(122, 162, 247, 0.08);
+}
+
+.pause-controls-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.pause-controls-list li {
+  font-size: 12px;
+  color: var(--controls-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pause-controls-list.hidden {
+  display: none;
+}
+
+.start-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.start-level-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--label-color);
+  font-weight: 600;
+  font-family: 'Courier New', Courier, monospace;
+  white-space: nowrap;
+}
+
+.start-level-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 13px;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.start-level-select:focus {
+  border-color: var(--accent);
+}
+
+.start-level-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ---- Power-up indicator ---- */

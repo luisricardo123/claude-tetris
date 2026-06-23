@@ -26,6 +26,11 @@
           <span class="value" id="level">1</span>
         </div>
 
+        <div class="panel-section" id="combo-section" style="display:none">
+          <span class="label">COMBO</span>
+          <span class="value combo-value" id="combo">x0</span>
+        </div>
+
         <div class="panel-section">
           <span class="label">POWER-UP</span>
           <div id="powerup-indicator"></div>
@@ -55,9 +60,38 @@
 
     <div id="overlay" class="overlay hidden">
       <div class="overlay-box">
-        <p id="overlay-title">GAME OVER</p>
-        <p id="overlay-score"></p>
-        <button id="restart-btn">Reiniciar</button>
+
+        <!-- START SCREEN -->
+        <div id="section-start" class="overlay-section">
+          <p class="overlay-title-text title-start">TETRIS</p>
+          <div id="records-start" class="records-container"></div>
+          <button id="play-btn" class="btn-primary">Jugar</button>
+          <button id="reset-records-start" class="btn-secondary">Resetear records</button>
+        </div>
+
+        <!-- PAUSE SCREEN (placeholder for Unit 1) -->
+        <div id="section-pause" class="overlay-section">
+          <p class="overlay-title-text title-pause">PAUSA</p>
+          <button id="resume-btn" class="btn-primary">Continuar</button>
+        </div>
+
+        <!-- GAME OVER SCREEN -->
+        <div id="section-gameover" class="overlay-section">
+          <p class="overlay-title-text title-gameover">GAME OVER</p>
+          <p id="overlay-score"></p>
+
+          <!-- Name entry form (shown when score qualifies) -->
+          <div id="name-entry" class="name-entry hidden">
+            <p class="name-entry-label">¡Nuevo record! Ingresa tu nombre:</p>
+            <input id="player-name" type="text" maxlength="12" placeholder="Tu nombre" class="name-input" />
+            <button id="save-score-btn" class="btn-primary">Guardar</button>
+          </div>
+
+          <div id="records-gameover" class="records-container"></div>
+          <button id="restart-btn" class="btn-primary">Reiniciar</button>
+          <button id="reset-records-gameover" class="btn-secondary">Resetear records</button>
+        </div>
+
       </div>
     </div>
   </div>

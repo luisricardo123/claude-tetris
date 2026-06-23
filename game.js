@@ -55,6 +55,19 @@ const restartBtn = document.getElementById('restart-btn');
 const themeToggleBtn = document.getElementById('theme-toggle');
 const powerupEl = document.getElementById('powerup-indicator');
 
+// Pause menu elements
+const pauseMenu = document.getElementById('pause-menu');
+const gameoverMenu = document.getElementById('gameover-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const restartPauseBtn = document.getElementById('restart-pause-btn');
+const controlsBtn = document.getElementById('controls-btn');
+const pauseControlsList = document.getElementById('pause-controls');
+const startLevelSelect = document.getElementById('start-level-select');
+
+// Starting level — persisted across sessions
+let startLevel = Math.min(15, Math.max(1, parseInt(localStorage.getItem('tetris-start-level'), 10) || 1));
+startLevelSelect.value = String(startLevel);
+
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let linesUntilPowerup, freezeUntil, activePowerup, pendingPowerup;
 
@@ -187,7 +200,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
+    level = Math.floor(lines / 10) + startLevel;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     linesUntilPowerup -= cleared;
     if (linesUntilPowerup <= 0) {
@@ -323,26 +336,44 @@ function drawNext() {
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
 }
 
+function showPauseMenu() {
+  // Disable start-level selector mid-game; changes only take effect on next game
+  startLevelSelect.disabled = true;
+  pauseMenu.classList.remove('hidden');
+  gameoverMenu.classList.add('hidden');
+  overlay.classList.remove('hidden');
+}
+
+function showGameoverMenu() {
+  // Re-enable start-level selector so player can choose level for next game
+  startLevelSelect.disabled = false;
+  pauseMenu.classList.add('hidden');
+  gameoverMenu.classList.remove('hidden');
+  overlay.classList.remove('hidden');
+}
+
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
   draw(); // render final: sólo fichas bloqueadas, sin pieza activa ni fantasma
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
-  overlay.classList.remove('hidden');
+  showGameoverMenu();
 }
 
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    overlay.classList.add('hidden');
+    pauseMenu.classList.add('hidden');
+    // reset controls panel to collapsed state on resume
+    pauseControlsList.classList.add('hidden');
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    showPauseMenu();
   }
 }
 
@@ -374,13 +405,15 @@ function loop(ts) {
 }
 
 function init() {
+  // Disable level selector once a game is running (re-enabled on game over)
+  startLevelSelect.disabled = true;
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (startLevel - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   linesUntilPowerup = POWERUP_INTERVAL;
@@ -392,12 +425,20 @@ function init() {
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  pauseMenu.classList.add('hidden');
+  gameoverMenu.classList.add('hidden');
+  pauseControlsList.classList.add('hidden');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  // Handle pause toggle before the paused/gameOver guard so Escape can un-pause
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    // Escape only un-pauses; it doesn't pause an active game (avoids accidental pauses)
+    if (e.code === 'Escape' && !paused) return;
+    if (!gameOver) { togglePause(); return; }
+  }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -419,6 +460,22 @@ document.addEventListener('keydown', e => {
       break;
   }
   updateHUD();
+});
+
+// Pause menu button wiring
+resumeBtn.addEventListener('click', togglePause);
+
+restartPauseBtn.addEventListener('click', () => {
+  init();
+});
+
+controlsBtn.addEventListener('click', () => {
+  pauseControlsList.classList.toggle('hidden');
+});
+
+startLevelSelect.addEventListener('change', () => {
+  startLevel = Math.min(15, Math.max(1, parseInt(startLevelSelect.value, 10) || 1));
+  localStorage.setItem('tetris-start-level', startLevel);
 });
 
 restartBtn.addEventListener('click', init);

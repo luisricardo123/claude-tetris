@@ -152,6 +152,27 @@ kbd {
   transition: background 0.2s, border-color 0.2s;
 }
 
+/* ---- Skin selector ---- */
+#skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  width: 100%;
+}
+
+#skin-select:hover,
+#skin-select:focus {
+  border-color: var(--accent-hover);
+  outline: none;
+}
+
 /* ---- Toggle de tema ---- */
 .theme-toggle {
   background: none;

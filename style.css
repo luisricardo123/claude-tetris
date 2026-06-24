@@ -119,6 +119,12 @@ body {
   transition: background 0.2s, border-color 0.2s;
 }
 
+/* ---- Combo HUD ---- */
+.combo-value {
+  color: #ffd54f;
+  font-size: 22px;
+}
+
 /* ---- Controles ---- */
 .controls ul {
   list-style: none;
@@ -177,6 +183,7 @@ kbd {
   background: var(--overlay-bg);
   backdrop-filter: blur(4px);
   border-radius: 4px;
+  overflow-y: auto;
 }
 
 .overlay.hidden {
@@ -189,23 +196,42 @@ kbd {
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  padding: 24px 16px;
+  width: 100%;
+  max-width: 320px;
 }
 
-#overlay-title {
+/* ---- Overlay sections ---- */
+.overlay-section {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.overlay-section.active {
+  display: flex;
+}
+
+.overlay-title-text {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 4px;
-  color: #e57373;
 }
+
+.title-start    { color: var(--accent); }
+.title-pause    { color: #ffd54f; }
+.title-gameover { color: #e57373; }
 
 #overlay-score {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--accent);
 }
 
-#restart-btn {
-  margin-top: 8px;
+/* ---- Buttons ---- */
+.btn-primary {
   background: var(--accent);
   color: var(--bg);
   border: none;
@@ -218,8 +244,194 @@ kbd {
   transition: background 0.15s;
 }
 
-#restart-btn:hover {
+.btn-primary:hover {
   background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- Pause menu buttons ---- */
+.menu-btn {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-align: center;
+}
+
+.menu-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(122, 162, 247, 0.08);
+}
+
+.pause-controls-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.pause-controls-list li {
+  font-size: 12px;
+  color: var(--controls-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pause-controls-list.hidden {
+  display: none;
+}
+
+.start-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.start-level-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--label-color);
+  font-weight: 600;
+  font-family: 'Courier New', Courier, monospace;
+  white-space: nowrap;
+}
+
+.start-level-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 13px;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.start-level-select:focus {
+  border-color: var(--accent);
+}
+
+.start-level-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Records table ---- */
+.records-container {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  width: 260px;
+  text-align: left;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 6px;
+}
+
+.records-table th {
+  color: var(--label-color);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 2px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.records-table td {
+  padding: 3px 4px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.records-table tr:last-child td {
+  border-bottom: none;
+}
+
+.record-new td {
+  color: #ffd54f !important;
+  font-weight: 700;
+}
+
+.records-meta {
+  font-size: 11px;
+  color: var(--label-color);
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* ---- Name entry ---- */
+.name-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.name-entry.hidden {
+  display: none;
+}
+
+.name-entry-label {
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.name-input {
+  background: var(--canvas-bg);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  padding: 6px 12px;
+  text-align: center;
+  width: 180px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.name-input:focus {
+  border-color: var(--accent-hover);
 }
 
 /* ---- Power-up indicator ---- */

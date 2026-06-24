@@ -26,6 +26,11 @@
           <span class="value" id="level">1</span>
         </div>
 
+        <div class="panel-section" id="combo-section" style="display:none">
+          <span class="label">COMBO</span>
+          <span class="value combo-value" id="combo">x0</span>
+        </div>
+
         <div class="panel-section">
           <span class="label">POWER-UP</span>
           <div id="powerup-indicator"></div>
@@ -43,7 +48,7 @@
             <li><kbd>↑</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd> / <kbd>Esc</kbd> pausa</li>
           </ul>
         </div>
 
@@ -55,9 +60,67 @@
 
     <div id="overlay" class="overlay hidden">
       <div class="overlay-box">
-        <p id="overlay-title">GAME OVER</p>
-        <p id="overlay-score"></p>
-        <button id="restart-btn">Reiniciar</button>
+
+        <!-- START SCREEN -->
+        <div id="section-start" class="overlay-section">
+          <p class="overlay-title-text title-start">TETRIS</p>
+          <div id="records-start" class="records-container"></div>
+          <button id="play-btn" class="btn-primary">Jugar</button>
+          <button id="reset-records-start" class="btn-secondary">Resetear records</button>
+        </div>
+
+        <!-- PAUSE SCREEN -->
+        <div id="section-pause" class="overlay-section">
+          <p class="overlay-title-text title-pause">PAUSA</p>
+          <button id="resume-btn" class="menu-btn">Reanudar</button>
+          <button id="restart-pause-btn" class="menu-btn">Reiniciar</button>
+          <button id="controls-btn" class="menu-btn">Ver controles</button>
+          <ul id="pause-controls" class="pause-controls-list hidden">
+            <li><kbd>←</kbd><kbd>→</kbd> mover</li>
+            <li><kbd>↑</kbd> rotar</li>
+            <li><kbd>↓</kbd> bajar</li>
+            <li><kbd>Space</kbd> caída</li>
+            <li><kbd>P</kbd> / <kbd>Esc</kbd> pausa</li>
+          </ul>
+          <div class="start-level-row">
+            <label for="start-level-select" class="start-level-label">Nivel inicial</label>
+            <select id="start-level-select" class="start-level-select">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option value="13">13</option>
+              <option value="14">14</option>
+              <option value="15">15</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- GAME OVER SCREEN -->
+        <div id="section-gameover" class="overlay-section">
+          <p class="overlay-title-text title-gameover">GAME OVER</p>
+          <p id="overlay-score"></p>
+
+          <!-- Name entry form (shown when score qualifies) -->
+          <div id="name-entry" class="name-entry hidden">
+            <p class="name-entry-label">¡Nuevo récord! Ingresa tu nombre:</p>
+            <input id="player-name" type="text" maxlength="12" placeholder="Tu nombre" class="name-input" />
+            <button id="save-score-btn" class="btn-primary">Guardar</button>
+          </div>
+
+          <div id="records-gameover" class="records-container"></div>
+          <button id="restart-btn" class="btn-primary">Reiniciar</button>
+          <button id="reset-records-gameover" class="btn-secondary">Resetear records</button>
+        </div>
+
       </div>
     </div>
   </div>
